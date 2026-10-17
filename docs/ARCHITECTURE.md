@@ -140,7 +140,31 @@ cd scanner; python -m pytest tests     # or: pip install pytest first
 - **Uninstall:** removes the app and the extracted scanner, then asks whether to also delete the library cache and settings. The default is to keep them.
 - Silent install: `aprp-setup-0.2.0.exe /VERYSILENT /CURRENTUSER /LANG=en`.
 
-The installer isn't code-signed, so Windows SmartScreen will warn on first run ("More info → Run anyway") until it's signed with a code-signing certificate (`SignTool=` in the .iss).
+### Code signing
+
+The build signs every executable when a certificate is configured: `aprp-scanner.exe` before it's embedded, `aprp.exe`, the installer and the uninstaller inside it. Signatures use SHA-256 with an RFC 3161 timestamp, so they stay valid after the certificate expires. Signing is done by [tools/sign.ps1](../tools/sign.ps1) (signtool from the Windows SDK), configured with environment variables:
+
+```powershell
+# A certificate in the Windows store (Certum SimplySign, USB token, any OV/EV cert):
+$env:APRP_SIGN_THUMBPRINT = "<SHA-1 thumbprint>"
+# ...or Azure Artifact Signing:
+$env:APRP_SIGN_AZURE_JSON = "C:\path\metadata.json"; $env:APRP_SIGN_AZURE_DLIB = "C:\path\Azure.CodeSigning.Dlib.dll"
+
+.\build.ps1 -RequireSign     # fails instead of producing an unsigned release
+```
+
+Without a certificate the build still works, but the output is unsigned (with a warning). The whole chain has been tested with a throwaway self-signed certificate.
+
+**Getting a certificate.** It has to come from a CA that Windows trusts and be issued to you or your organisation after an identity check. A self-signed certificate doesn't help with SmartScreen. Options to compare (check current prices and eligibility):
+
+| Option | Notes |
+|---|---|
+| [SignPath Foundation](https://signpath.org/) | Free for open-source projects. You apply, and releases are built and signed in CI (GitHub Actions). The publisher shown is "SignPath Foundation". |
+| [Certum Open Source Code Signing](https://www.certum.eu/) | Low-cost certificate for individual open-source developers. The cloud key (SimplySign) appears in the Windows certificate store, so set `APRP_SIGN_THUMBPRINT`. The publisher is your name. |
+| [Azure Artifact Signing](https://learn.microsoft.com/azure/trusted-signing/) | Microsoft's managed signing, billed monthly, with restrictions on which countries and entity types qualify. Set `APRP_SIGN_AZURE_*`. |
+| OV/EV certificate (DigiCert, Sectigo, …) | The classic route. More expensive, and the key lives on a hardware token or HSM. |
+
+**What signing does and doesn't do.** A valid signature replaces "Unknown publisher" with your name and lets SmartScreen build **reputation** for your certificate. The warning fades as people download and run signed releases, but it isn't removed instantly, not even with EV certificates. Submitting new releases to [Microsoft's file submission portal](https://www.microsoft.com/wdsi/filesubmission) as a software developer can speed this up, and it also helps with antivirus false positives, which PyInstaller-built executables sometimes trigger.
 
 ### App languages
 

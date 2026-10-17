@@ -33,7 +33,7 @@
 
 You don't need .NET or Python. There's also a portable **`aprp.exe`** that runs without installing anything.
 
-> The installer isn't code-signed yet, so Windows SmartScreen may show a warning. Click **More info → Run anyway**.
+> The installer isn't code-signed yet, so Windows SmartScreen may show a warning. Click **More info → Run anyway**. The build pipeline is ready for signing and only needs a certificate (see [Code signing](docs/ARCHITECTURE.md#code-signing)).
 
 <p align="center"><img src="docs/installer.png" alt="aprp installer" width="560"></p>
 

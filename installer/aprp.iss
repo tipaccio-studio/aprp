@@ -46,6 +46,11 @@ CloseApplications=yes
 RestartApplications=no
 Compression=lzma2/ultra64
 SolidCompression=yes
+#ifdef Sign
+; build.ps1 passes /DSign and /Saprpsign=... when a certificate is configured (tools/sign.ps1).
+SignTool=aprpsign
+SignedUninstaller=yes
+#endif
 
 [Languages]
 Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
