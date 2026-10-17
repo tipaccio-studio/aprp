@@ -75,16 +75,3 @@ tools/          Generates the icon, banners and platform logos
 Steam, Epic Games and Xbox are trademarks of their respective owners. aprp is not affiliated with Valve, Epic Games or Microsoft.
 
 ---
-
-## 🇮🇹 Italiano
-
-**aprp** riunisce in un'unica libreria tutti i tuoi giochi di **Steam**, **Epic Games** e **Xbox / PC Game Pass**, sia quelli installati sia quelli solo posseduti.
-
-![aprp in italiano](docs/screenshot.png)
-
-- **Gioca o installa** con un clic: i giochi si avviano tramite il loro store, quindi DRM, aggiornamenti e salvataggi funzionano normalmente.
-- **Copertine, banner e descrizioni** in italiano, quando lo store le fornisce.
-- **Tempo di gioco** registrato automaticamente.
-- **6 lingue**, da cambiare al volo nella barra laterale.
-
-**Installazione:** scarica `aprp-setup-x.y.z.exe` da [Releases](https://github.com/tipaccio-studio/aprp/releases/latest) e avvialo. Non servono permessi di amministratore. Se Windows mostra un avviso SmartScreen, clicca **Ulteriori informazioni → Esegui comunque**.
