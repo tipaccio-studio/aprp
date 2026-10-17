@@ -33,7 +33,9 @@
 
 You don't need .NET or Python. There's also a portable **`aprp.exe`** that runs without installing anything.
 
-> The installer isn't code-signed yet, so Windows SmartScreen may show a warning. Click **More info → Run anyway**. The build pipeline is ready for signing and only needs a certificate (see [Code signing](docs/ARCHITECTURE.md#code-signing)).
+> Until releases are signed, Windows SmartScreen may show a warning. Click **More info → Run anyway**.
+
+**[Code signing policy](docs/CODE_SIGNING.md)** · **[Privacy](docs/PRIVACY.md)**
 
 <p align="center"><img src="docs/installer.png" alt="aprp installer" width="560"></p>
 
@@ -68,9 +70,13 @@ installer/      Inno Setup script and wizard artwork
 tools/          Generates the icon, banners and platform logos
 ```
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org). Who builds, reviews and approves releases: [docs/CODE_SIGNING.md](docs/CODE_SIGNING.md).
+
 ## License
 
-[MIT](LICENSE) © 2026 tipaccio-studio. See [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES.md) for the bundled components.
+[MIT](LICENSE) © 2026 Tipaccio Studio. See [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES.md) for the bundled components.
 Steam, Epic Games and Xbox are trademarks of their respective owners. aprp is not affiliated with Valve, Epic Games or Microsoft.
 
 ---

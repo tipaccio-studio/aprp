@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SignPath artifact configuration "installer": copy into the aprp project on signpath.io (slug: installer).
+     Round 2 of .github/workflows/release.yml: the GitHub artifact is a ZIP containing the Inno Setup installer,
+     which already packages the aprp.exe signed in round 1. -->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file path="aprp-setup-${version}.exe" product-name="aprp" product-version="${version}">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

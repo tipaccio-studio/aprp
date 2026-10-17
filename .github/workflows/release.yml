@@ -1,0 +1,154 @@
+# Builds aprp on a GitHub-hosted Windows runner and, when SignPath is configured, has
+# SignPath sign the release binaries (SignPath Foundation, free for open source).
+#
+#   push to main         -> build check, unsigned artifacts
+#   push a tag v*        -> build, sign (if configured), draft GitHub release with the signed files
+#   Run workflow (manual) -> build, sign (if configured)
+#
+# Signing happens in two rounds, because the installer has to package the *signed* aprp.exe:
+#   1. build aprp.exe            -> SignPath signs aprp.exe
+#   2. build the installer       -> SignPath signs aprp-setup-<version>.exe
+# Each round is a signing request that an approver confirms on signpath.io.
+#
+# Setup (Settings -> Secrets and variables -> Actions):
+#   secret   SIGNPATH_API_TOKEN          API token of the SignPath CI user (submitter)
+#   variable SIGNPATH_ORGANIZATION_ID    SignPath organization id
+#   variable SIGNPATH_PROJECT_SLUG       optional, default "aprp"
+#   variable SIGNPATH_SIGNING_POLICY     optional, default "release-signing"
+# Without SIGNPATH_ORGANIZATION_ID the workflow still builds; it just skips signing.
+
+name: Build & release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # create the draft release on tags
+  actions: read     # SignPath reads the workflow run and downloads the artifacts
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      SIGN: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install build tools
+        shell: pwsh
+        run: |
+          python -m pip install --quiet pyinstaller
+          choco install innosetup --no-progress -y
+
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          $v = ([xml](Get-Content src/Aprp.App/Aprp.App.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ($env:GITHUB_REF -like 'refs/tags/v*' -and "v$v" -ne $env:GITHUB_REF_NAME) {
+            throw "Tag $env:GITHUB_REF_NAME doesn't match <Version>$v</Version> in Aprp.App.csproj"
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      # ── round 1: aprp.exe ────────────────────────────────────────────────
+      - name: Build aprp.exe
+        shell: pwsh
+        run: ./build.ps1 -Stage app
+
+      - name: Upload unsigned aprp.exe
+        id: upload-app
+        uses: actions/upload-artifact@v7
+        with:
+          name: aprp-exe-unsigned
+          path: dist/aprp.exe
+          if-no-files-found: error
+
+      - name: Sign aprp.exe (SignPath)
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'aprp' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY || 'release-signing' }}
+          artifact-configuration-slug: app
+          github-artifact-id: ${{ steps.upload-app.outputs.artifact-id }}
+          parameters: |
+            version: ${{ toJSON(steps.version.outputs.version) }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600   # leaves time for the manual approval
+          output-artifact-directory: dist
+
+      # ── round 2: installer (packages the signed aprp.exe) ────────────────
+      - name: Build installer
+        shell: pwsh
+        run: ./build.ps1 -Stage installer
+
+      - name: Upload unsigned installer
+        id: upload-setup
+        uses: actions/upload-artifact@v7
+        with:
+          name: aprp-setup-unsigned
+          path: dist/aprp-setup-*.exe
+          if-no-files-found: error
+
+      - name: Sign installer (SignPath)
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'aprp' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY || 'release-signing' }}
+          artifact-configuration-slug: installer
+          github-artifact-id: ${{ steps.upload-setup.outputs.artifact-id }}
+          parameters: |
+            version: ${{ toJSON(steps.version.outputs.version) }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: dist
+
+      # ── check and publish ────────────────────────────────────────────────
+      - name: Check signatures
+        shell: pwsh
+        run: |
+          foreach ($f in Get-ChildItem dist/*.exe) {
+            $s = Get-AuthenticodeSignature $f.FullName
+            "{0}: {1} {2}" -f $f.Name, $s.Status, $s.SignerCertificate.Subject
+            if ($env:SIGN -eq 'true' -and $s.Status -ne 'Valid') { throw "$($f.Name) is not validly signed" }
+          }
+          Get-FileHash dist/*.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Tee-Object dist/SHA256SUMS.txt
+
+      - name: Upload release files
+        uses: actions/upload-artifact@v7
+        with:
+          name: aprp-${{ steps.version.outputs.version }}${{ env.SIGN == 'true' && '-signed' || '-unsigned' }}
+          path: |
+            dist/aprp.exe
+            dist/aprp-setup-*.exe
+            dist/SHA256SUMS.txt
+
+      - name: Draft GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $files = @("dist/aprp.exe") + (Get-ChildItem dist/aprp-setup-*.exe).FullName + "dist/SHA256SUMS.txt"
+          gh release create $env:GITHUB_REF_NAME @files --draft --title "aprp ${{ steps.version.outputs.version }}" --generate-notes

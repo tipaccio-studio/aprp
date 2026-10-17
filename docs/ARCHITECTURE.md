@@ -142,7 +142,9 @@ cd scanner; python -m pytest tests     # or: pip install pytest first
 
 ### Code signing
 
-The build signs every executable when a certificate is configured: `aprp-scanner.exe` before it's embedded, `aprp.exe`, the installer and the uninstaller inside it. Signatures use SHA-256 with an RFC 3161 timestamp, so they stay valid after the certificate expires. Signing is done by [tools/sign.ps1](../tools/sign.ps1) (signtool from the Windows SDK), configured with environment variables:
+**Official releases** are built and signed in CI. [.github/workflows/release.yml](../.github/workflows/release.yml) builds `aprp.exe` and the installer on a GitHub-hosted runner, and SignPath signs them with the SignPath Foundation certificate. The artifact configurations to paste into SignPath are in [.signpath/artifact-configurations](../.signpath/artifact-configurations). See the [code signing policy](CODE_SIGNING.md).
+
+**Local builds** can be signed with your own certificate. The build signs every executable when a certificate is configured: `aprp-scanner.exe` before it's embedded, `aprp.exe`, the installer and the uninstaller inside it. Signatures use SHA-256 with an RFC 3161 timestamp, so they stay valid after the certificate expires. Signing is done by [tools/sign.ps1](../tools/sign.ps1) (signtool from the Windows SDK), configured with environment variables:
 
 ```powershell
 # A certificate in the Windows store (Certum SimplySign, USB token, any OV/EV cert):
