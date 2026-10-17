@@ -5,7 +5,6 @@
 <p align="center">
   <b>All your Steam, Epic Games and Xbox games in one library.</b><br>
   <a href="https://github.com/tipaccio-studio/aprp/releases/latest"><b>Download for Windows</b></a> ·
-  <a href="#-italiano">Italiano</a> ·
   <a href="docs/ARCHITECTURE.md">How it works</a>
 </p>
 
