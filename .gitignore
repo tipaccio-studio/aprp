@@ -1,0 +1,12 @@
+bin/
+obj/
+native/build/
+native/bin/
+__pycache__/
+*.pyc
+dist/
+build/
+.vs/
+scanner/dist/
+scanner/build/
+dist/

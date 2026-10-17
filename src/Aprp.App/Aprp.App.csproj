@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Aprp</RootNamespace>
+    <AssemblyName>aprp</AssemblyName>
+    <ApplicationIcon>Assets\aprp.ico</ApplicationIcon>
+    <Version>0.2.0</Version>
+    <Product>aprp</Product>
+    <Description>Unified game launcher for Steam, Epic Games and Xbox</Description>
+    <!-- Must match the native DLL's architecture. -->
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <SelfContained Condition="'$(SelfContained)' == ''">false</SelfContained>
+  </PropertyGroup>
+
+  <!-- `dotnet publish -c Release -p:PublishProfile=SingleExe` (see build.ps1) -->
+  <PropertyGroup Condition="'$(PublishProfile)' == 'SingleExe'">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\aprp.png" />
+    <Resource Include="Assets\aprp.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Dev: Python scanner runs from <output>\scanner via `python -m aprp_scanner`. -->
+    <None Include="..\..\scanner\aprp_scanner\*.py"
+          Link="scanner\aprp_scanner\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="Never" />
+
+    <!-- Release: the frozen scanner (PyInstaller) is embedded and extracted on first run. -->
+    <EmbeddedResource Include="..\..\scanner\dist\aprp-scanner.exe"
+                      Condition="Exists('..\..\scanner\dist\aprp-scanner.exe')"
+                      LogicalName="aprp-scanner.exe" />
+
+    <!-- C++ process monitor; the app still runs (without playtime tracking) if it hasn't been built. -->
+    <None Include="..\..\native\bin\aprp_native.dll"
+          Condition="Exists('..\..\native\bin\aprp_native.dll')"
+          Link="aprp_native.dll"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
