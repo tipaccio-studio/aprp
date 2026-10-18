@@ -23,6 +23,7 @@
 - **Artwork and descriptions.** Each game gets a cover, a wide banner, its title logo, the developer and a short description, in your language when the store provides one.
 - **Playtime.** Hours played and your last session for every game: imported from Steam and Modrinth, and measured by aprp itself for Epic and Xbox games. A *Recently played* view puts your latest games first.
 - **Minecraft modpacks.** Your **Modrinth App** instances appear under Xbox, with icon, screenshot, Minecraft version, loader and mod count. *Play* starts the instance directly.
+- **Updates and uninstall built in.** *About* shows the version, checks GitHub for new releases and installs them (the download is checked against the release checksums). It can also uninstall aprp.
 - **Six languages:** Italiano, English, Español, Français, Deutsch and Português. You can switch from the sidebar without restarting.
 - **Quick and private.** The library is cached locally, so after the first scan aprp opens straight away. The only network requests are for public store metadata.
 
@@ -77,7 +78,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 
 ## License
 
-[MIT](LICENSE) © 2026 Tipaccio Studio. See [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES.md) for the bundled components.
+[MIT](LICENSE) © 2026 [Tipaccio Studio](https://tipacciostudio.com/). See [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES.md) for the bundled components.
 Steam, Epic Games and Xbox are trademarks of their respective owners. aprp is not affiliated with Valve, Epic Games or Microsoft.
 
 ---

@@ -16,6 +16,7 @@ To show descriptions and artwork, aprp makes requests to these public services w
 | Microsoft Store catalog (`displaycatalog.mp.microsoft.com`) | Package names of your Xbox/Store games, your language | Descriptions, banners |
 | Wikipedia (`*.wikipedia.org`) | Game titles, your language | Descriptions when a store has none |
 | Image servers of Steam, Epic Games and Microsoft | Image addresses | Cover and banner images |
+| GitHub (`api.github.com`, `github.com`) | aprp's version, in the User-Agent | Checking for a newer aprp release at startup and when you press **Check for updates**, and downloading the installer when you choose **Download and install** |
 
 Like any web request, these services can see your IP address. They don't receive your account names, store credentials or any other personal data from aprp. Their own privacy policies apply: [Valve](https://store.steampowered.com/privacy_agreement/), [Microsoft](https://privacy.microsoft.com/privacystatement), [Wikimedia Foundation](https://foundation.wikimedia.org/wiki/Policy:Privacy_policy), [Epic Games](https://www.epicgames.com/site/privacypolicy).
 

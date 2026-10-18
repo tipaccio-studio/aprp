@@ -20,6 +20,8 @@ Every release is signed only after a project approver manually approves the sign
 | Committers and reviewers | [@tipaccio-studio](https://github.com/tipaccio-studio) |
 | Approvers | [@tipaccio-studio](https://github.com/tipaccio-studio) |
 
+aprp is made by [Tipaccio Studio](https://tipacciostudio.com/).
+
 Contributions from people outside this list are reviewed by a committer before they are merged. All team members use multi-factor authentication on GitHub and SignPath.
 
 ## Privacy policy

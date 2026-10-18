@@ -17,6 +17,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly PlaytimeStore _playtime = new();
 
     public ObservableCollection<Game> Games { get; } = new();
+    public AboutViewModel About { get; } = new();
     public ICollectionView GamesView { get; }
 
     public ICommand RescanCommand { get; }
@@ -40,6 +41,7 @@ public sealed class MainViewModel : ObservableObject
             if (p is not string code || code == Loc.Instance.Language) return;
             Loc.Instance.SetLanguage(code);
             foreach (var g in Games) g.NotifyPlaytime();   // "2 days ago" etc. in the new language
+            About.Refresh();
             await RescanAsync(online: true); // descriptions in the new language
         });
     }
@@ -138,6 +140,7 @@ public sealed class MainViewModel : ObservableObject
         if (_scanner.LoadCache() is { } cached)
             MergeGames(cached.Games);
         await RescanAsync(online: false); // fast: local files + cached metadata
+        _ = About.CheckAsync(userAsked: false); // quietly; shows a badge if there is an update
         await RescanAsync(online: true);  // fills in new descriptions/banners in the background
         if (!_tracker.IsAvailable)
             Status = Loc.Get("NoNative");
