@@ -48,12 +48,15 @@
       <Geometry x:Key="DownloadIcon">M11 3h2v10.2l3.6-3.6 1.4 1.4-6 6-6-6 1.4-1.4 3.6 3.6z M4 19h16v2H4z</Geometry>
       <Geometry x:Key="FolderIcon">M3 5.5C3 4.7 3.7 4 4.5 4h5l2 2.5h8c.8 0 1.5.7 1.5 1.5v10.5c0 .8-.7 1.5-1.5 1.5h-15C3.7 20 3 19.3 3 18.5z</Geometry>
       <Geometry x:Key="RefreshIcon">M12 4a8 8 0 0 1 7.4 5H17v2h6V5h-2v2.3A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z M20 12a8 8 0 0 1-15.4 3H7v-2H1v6h2v-2.3A10 10 0 0 0 22 12z</Geometry>
+      <Geometry x:Key="ClockIcon">M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1 3v4.6l3.4 2-1 1.7L11 12.7V7z</Geometry>
+      <SolidColorBrush x:Key="ModrinthBrush" Color="#00AF5C"/>
       <Geometry x:Key="SearchIcon">M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z</Geometry>
 
       <local:ImageConverter x:Key="Img"/>
       <local:PlatformConverter x:Key="Platform"/>
       <local:BytesConverter x:Key="Bytes"/>
       <local:VisibilityConverter x:Key="Vis"/>
+      <local:EqualsConverter x:Key="Is"/>
 
       <!-- ── Sidebar navigation ───────────────────────────────── -->
       <Style x:Key="NavItem" TargetType="RadioButton">

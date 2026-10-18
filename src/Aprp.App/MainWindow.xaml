@@ -38,10 +38,10 @@
                 <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.5" Color="Black"/>
               </Border.Effect>
             </Border>
-            <TextBlock Text="{Binding Initial}" FontSize="60" FontWeight="Bold" Foreground="#30FFFFFF"
+            <TextBlock x:Name="InitialText" Text="{Binding Initial}" FontSize="60" FontWeight="Bold" Foreground="#30FFFFFF"
                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
             <!-- Image (not ImageBrush): only Image repaints when a web download completes. -->
-            <Image Source="{Binding Cover, Converter={StaticResource Img}}" Stretch="UniformToFill" Margin="2"
+            <Image x:Name="CoverImage" Source="{Binding Cover, Converter={StaticResource Img}}" Stretch="UniformToFill" Margin="2"
                    Width="152" Height="230" RenderOptions.BitmapScalingMode="HighQuality">
               <Image.Clip>
                 <RectangleGeometry Rect="0,0,152,230" RadiusX="10" RadiusY="10"/>
@@ -85,8 +85,12 @@
 
           <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13.5" Margin="2,10,2,0"
                      TextTrimming="CharacterEllipsis"/>
-          <TextBlock x:Name="Subtitle" Text="{Binding Platform, Converter={StaticResource Platform}}"
-                     FontSize="12" Margin="2,2,2,0" Foreground="{StaticResource MutedBrush}"/>
+          <DockPanel Margin="2,2,2,0">
+            <TextBlock DockPanel.Dock="Right" Text="{Binding PlaytimeText}" FontSize="11.5" Margin="6,0,0,0"
+                       Foreground="{StaticResource MutedBrush}" Visibility="{Binding HasPlaytime, Converter={StaticResource Vis}}"/>
+            <TextBlock x:Name="Subtitle" Text="{Binding Platform, Converter={StaticResource Platform}}"
+                       FontSize="12" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis"/>
+          </DockPanel>
         </StackPanel>
       </Grid>
 
@@ -112,6 +116,15 @@
         <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
           <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource AccentGradient}"/>
           <Setter TargetName="Glow" Property="Visibility" Value="Visible"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Source}" Value="modrinth">
+          <Setter TargetName="Subtitle" Property="Text" Value="Modrinth"/>
+          <Setter TargetName="Subtitle" Property="Foreground" Value="{StaticResource ModrinthBrush}"/>
+          <Setter TargetName="CoverImage" Property="Stretch" Value="Uniform"/>
+          <Setter TargetName="CoverImage" Property="Margin" Value="30"/>
+          <Setter TargetName="CoverImage" Property="Width" Value="96"/>
+          <Setter TargetName="CoverImage" Property="Height" Value="96"/>
+          <Setter TargetName="CoverImage" Property="Clip" Value="{x:Null}"/>
         </DataTrigger>
         <DataTrigger Binding="{Binding Installed}" Value="False">
           <Setter TargetName="Dim" Property="Visibility" Value="Visible"/>
@@ -196,28 +209,35 @@
 
         <StackPanel>
           <TextBlock Text="{local:T Library}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" Margin="28,0,0,8"/>
-          <RadioButton Style="{StaticResource NavItem}" IsChecked="True" Command="{Binding SelectPlatformCommand}" CommandParameter="all">
+          <RadioButton Style="{StaticResource NavItem}" IsChecked="{Binding Platform, Converter={StaticResource Is}, ConverterParameter=all}">
             <DockPanel>
               <Border DockPanel.Dock="Right" Style="{StaticResource CountPill}"><TextBlock Text="{Binding AllCount}"/></Border>
               <ContentControl Content="{StaticResource AllLogo}" ContentTemplate="{StaticResource NavIcon}" Margin="0,0,14,0"/>
               <TextBlock Text="{local:T AllGames}" VerticalAlignment="Center"/>
             </DockPanel>
           </RadioButton>
-          <RadioButton Style="{StaticResource NavItem}" Command="{Binding SelectPlatformCommand}" CommandParameter="steam">
+          <RadioButton Style="{StaticResource NavItem}" IsChecked="{Binding Platform, Converter={StaticResource Is}, ConverterParameter=recent}">
+            <DockPanel>
+              <Border DockPanel.Dock="Right" Style="{StaticResource CountPill}"><TextBlock Text="{Binding RecentCount}"/></Border>
+              <ContentControl Content="{StaticResource ClockIcon}" ContentTemplate="{StaticResource NavIcon}" Margin="0,0,14,0"/>
+              <TextBlock Text="{local:T Recent}" VerticalAlignment="Center"/>
+            </DockPanel>
+          </RadioButton>
+          <RadioButton Style="{StaticResource NavItem}" IsChecked="{Binding Platform, Converter={StaticResource Is}, ConverterParameter=steam}">
             <DockPanel>
               <Border DockPanel.Dock="Right" Style="{StaticResource CountPill}"><TextBlock Text="{Binding SteamCount}"/></Border>
               <ContentControl Content="{StaticResource SteamLogo}" ContentTemplate="{StaticResource NavIcon}" Margin="0,0,14,0"/>
               <TextBlock Text="Steam" VerticalAlignment="Center"/>
             </DockPanel>
           </RadioButton>
-          <RadioButton Style="{StaticResource NavItem}" Command="{Binding SelectPlatformCommand}" CommandParameter="epic">
+          <RadioButton Style="{StaticResource NavItem}" IsChecked="{Binding Platform, Converter={StaticResource Is}, ConverterParameter=epic}">
             <DockPanel>
               <Border DockPanel.Dock="Right" Style="{StaticResource CountPill}"><TextBlock Text="{Binding EpicCount}"/></Border>
               <ContentControl Content="{StaticResource EpicLogo}" ContentTemplate="{StaticResource NavIcon}" Margin="0,0,14,0"/>
               <TextBlock Text="Epic Games" VerticalAlignment="Center"/>
             </DockPanel>
           </RadioButton>
-          <RadioButton Style="{StaticResource NavItem}" Command="{Binding SelectPlatformCommand}" CommandParameter="xbox">
+          <RadioButton Style="{StaticResource NavItem}" IsChecked="{Binding Platform, Converter={StaticResource Is}, ConverterParameter=xbox}">
             <DockPanel>
               <Border DockPanel.Dock="Right" Style="{StaticResource CountPill}"><TextBlock Text="{Binding XboxCount}"/></Border>
               <ContentControl Content="{StaticResource XboxLogo}" ContentTemplate="{StaticResource NavIcon}" Margin="0,0,14,0"/>
@@ -257,7 +277,8 @@
         <Rectangle Fill="{StaticResource HeroFadeLeft}"/>
         <Rectangle Fill="{StaticResource HeroFadeBottom}"/>
 
-        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Left" MaxWidth="700" Margin="44,0,44,26">
+        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Left" MaxWidth="700" Margin="44,0,44,26"
+                    Visibility="{Binding DataContext.SelectedGame, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource Vis}}">
           <Image Source="{Binding Logo, Converter={StaticResource Img}, ConverterParameter=800}"
                  MaxHeight="112" MaxWidth="420" HorizontalAlignment="Left" Stretch="Uniform"
                  Visibility="{Binding Logo, Converter={StaticResource Vis}}">
@@ -305,6 +326,31 @@
                     Visibility="{Binding SizeBytes, Converter={StaticResource Vis}}">
               <TextBlock Text="{Binding SizeBytes, Converter={StaticResource Bytes}}" FontSize="12" FontWeight="SemiBold"/>
             </Border>
+            <Border CornerRadius="7" Padding="9,4" Margin="0,0,8,6" Background="{StaticResource ModrinthBrush}">
+              <Border.Style>
+                <Style TargetType="Border">
+                  <Setter Property="Visibility" Value="Collapsed"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source}" Value="modrinth">
+                      <Setter Property="Visibility" Value="Visible"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
+              <StackPanel Orientation="Horizontal">
+                <Viewbox Width="13" Height="13" Margin="0,0,7,0"><Path Data="{StaticResource ModrinthLogo}" Fill="White"/></Viewbox>
+                <TextBlock Text="Modrinth" FontSize="12" FontWeight="SemiBold"/>
+              </StackPanel>
+            </Border>
+            <Border CornerRadius="7" Padding="9,4" Margin="0,0,8,6" Background="#33FFFFFF"
+                    Visibility="{Binding HasPlaytime, Converter={StaticResource Vis}}">
+              <StackPanel Orientation="Horizontal">
+                <Viewbox Width="12" Height="12" Margin="0,0,6,0"><Path Data="{StaticResource ClockIcon}" Fill="{StaticResource TextBrush}"/></Viewbox>
+                <TextBlock Text="{Binding PlaytimeText}" FontSize="12" FontWeight="SemiBold"/>
+              </StackPanel>
+            </Border>
+            <TextBlock Text="{Binding LastPlayedText}" FontSize="12.5" Foreground="{StaticResource SubtleBrush}"
+                       VerticalAlignment="Center" Margin="2,0,10,6" Visibility="{Binding HasLastPlayed, Converter={StaticResource Vis}}"/>
             <TextBlock Text="{Binding Developer}" FontSize="12.5" Foreground="{StaticResource SubtleBrush}"
                        VerticalAlignment="Center" Margin="4,0,0,6"/>
           </WrapPanel>
@@ -363,6 +409,10 @@
           </Border>
         </StackPanel>
       </DockPanel>
+
+      <TextBlock Grid.Row="2" Text="{local:T Empty}" FontSize="16" Foreground="{StaticResource MutedBrush}"
+                 HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,60,0,0"
+                 Visibility="{Binding VisibleCount, Converter={StaticResource Vis}, ConverterParameter=Invert}"/>
 
       <!-- Library grid -->
       <ListBox Grid.Row="2" ItemsSource="{Binding GamesView}" SelectedItem="{Binding SelectedGame}"

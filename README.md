@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b>All your Steam, Epic Games and Xbox games in one library.</b><br>
+  <b>All your Steam, Epic Games, Xbox and Modrinth games in one library.</b><br>
   <a href="https://github.com/tipaccio-studio/aprp/releases/latest"><b>Download for Windows</b></a> ·
   <a href="docs/ARCHITECTURE.md">How it works</a>
 </p>
@@ -21,7 +21,8 @@
 - **One library.** aprp finds your installed and owned games on **Steam**, **Epic Games** and **Xbox / PC Game Pass** automatically. You don't need to sign in or create API keys.
 - **Play or install with one click.** Games launch through their own store, so DRM, updates, cloud saves and overlays keep working. For games you own but haven't installed, the button opens the store's install dialog.
 - **Artwork and descriptions.** Each game gets a cover, a wide banner, its title logo, the developer and a short description, in your language when the store provides one.
-- **Playtime.** A small native monitor sees when a game is running and how long you played.
+- **Playtime.** Hours played and your last session for every game: imported from Steam and Modrinth, and measured by aprp itself for Epic and Xbox games. A *Recently played* view puts your latest games first.
+- **Minecraft modpacks.** Your **Modrinth App** instances appear under Xbox, with icon, screenshot, Minecraft version, loader and mod count. *Play* starts the instance directly.
 - **Six languages:** Italiano, English, Español, Français, Deutsch and Português. You can switch from the sidebar without restarting.
 - **Quick and private.** The library is cached locally, so after the first scan aprp opens straight away. The only network requests are for public store metadata.
 

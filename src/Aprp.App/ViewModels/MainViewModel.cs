@@ -14,6 +14,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly ScannerService _scanner = new();
     private readonly LauncherService _launcher = new();
     private readonly SessionTracker _tracker = new();
+    private readonly PlaytimeStore _playtime = new();
 
     public ObservableCollection<Game> Games { get; } = new();
     public ICollectionView GamesView { get; }
@@ -21,27 +22,24 @@ public sealed class MainViewModel : ObservableObject
     public ICommand RescanCommand { get; }
     public ICommand LaunchCommand { get; }
     public ICommand OpenFolderCommand { get; }
-    public ICommand SelectPlatformCommand { get; }
 
     public MainViewModel()
     {
         GamesView = CollectionViewSource.GetDefaultView(Games);
         GamesView.Filter = o => o is Game g && Matches(g);
-        // Installed games first, then A–Z.
-        GamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Installed), ListSortDirection.Descending));
-        GamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Title), ListSortDirection.Ascending));
+        ApplySort();
 
         RescanCommand = new RelayCommand(async _ => await RescanAsync(online: true), _ => !IsScanning);
         LaunchCommand = new RelayCommand(p => { if ((p as Game ?? SelectedGame) is { } g) _ = LaunchAsync(g); });
         OpenFolderCommand = new RelayCommand(
             _ => Process.Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { SelectedGame!.InstallDir } }),
             _ => SelectedGame is { Installed: true } g && Directory.Exists(g.InstallDir));
-        SelectPlatformCommand = new RelayCommand(p => Platform = p as string ?? "all");
         SetLanguageCommand = new RelayCommand(async p =>
         {
             IsLanguageMenuOpen = false;
             if (p is not string code || code == Loc.Instance.Language) return;
             Loc.Instance.SetLanguage(code);
+            foreach (var g in Games) g.NotifyPlaytime();   // "2 days ago" etc. in the new language
             await RescanAsync(online: true); // descriptions in the new language
         });
     }
@@ -60,7 +58,30 @@ public sealed class MainViewModel : ObservableObject
     public string Platform
     {
         get => _platform;
-        set { if (SetField(ref _platform, value)) RefreshView(); }
+        set
+        {
+            if (!SetField(ref _platform, value)) return;
+            ApplySort();
+            RefreshView();
+        }
+    }
+
+    /// <summary>Recently played: newest session first. Everything else: installed first, then A–Z.</summary>
+    private void ApplySort()
+    {
+        using (GamesView.DeferRefresh())
+        {
+            GamesView.SortDescriptions.Clear();
+            if (Platform == "recent")
+            {
+                GamesView.SortDescriptions.Add(new SortDescription(nameof(Game.LastPlayed), ListSortDirection.Descending));
+            }
+            else
+            {
+                GamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Installed), ListSortDirection.Descending));
+                GamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Title), ListSortDirection.Ascending));
+            }
+        }
     }
 
     private string _searchText = "";
@@ -109,6 +130,7 @@ public sealed class MainViewModel : ObservableObject
     public int SteamCount => Games.Count(g => g.Platform == "steam");
     public int EpicCount => Games.Count(g => g.Platform == "epic");
     public int XboxCount => Games.Count(g => g.Platform == "xbox");
+    public int RecentCount => Games.Count(g => g.HasLastPlayed);
     public int VisibleCount => GamesView.Cast<object>().Count();
 
     public async Task InitializeAsync()
@@ -122,7 +144,7 @@ public sealed class MainViewModel : ObservableObject
     }
 
     private bool Matches(Game g) =>
-        (Platform == "all" || g.Platform == Platform) &&
+        (Platform == "all" || g.Platform == Platform || (Platform == "recent" && g.HasLastPlayed)) &&
         (!InstalledOnly || g.Installed) &&
         (SearchText.Length == 0 || g.Title.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
@@ -169,9 +191,15 @@ public sealed class MainViewModel : ObservableObject
         foreach (var game in incoming.Values)
         {
             if (!existing.TryGetValue(game.Id, out var current))
+            {
+                _playtime.Apply(game);
                 Games.Add(game);
+            }
             else if (current.Installed != game.Installed || current.LaunchUri != game.LaunchUri)
+            {
+                _playtime.Apply(game);
                 Games[Games.IndexOf(current)] = game; // install state changed: replace
+            }
             else
                 current.UpdateFrom(game);
         }
@@ -180,6 +208,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(SteamCount));
         OnPropertyChanged(nameof(EpicCount));
         OnPropertyChanged(nameof(XboxCount));
+        OnPropertyChanged(nameof(RecentCount));
         RefreshView();
     }
 
@@ -194,10 +223,21 @@ public sealed class MainViewModel : ObservableObject
                 Status = Loc.Get("Installing", store, game.Title);
                 return;
             }
+            if (game.Source == "modrinth")
+            {
+                // The Modrinth App launches Minecraft and records the playtime itself.
+                Status = Loc.Get("LaunchingVia", game.Title, "Modrinth");
+                return;
+            }
             Status = Loc.Get("Launching", game.Title);
             var played = await _tracker.TrackAsync(game);
             if (played is { } t)
+            {
+                _playtime.Record(game, t);
                 Status = Loc.Get("Played", game.Title, (int)t.TotalHours, t.Minutes);
+                OnPropertyChanged(nameof(RecentCount));
+                if (Platform == "recent") RefreshView();
+            }
         }
         catch (Exception ex)
         {

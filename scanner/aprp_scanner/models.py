@@ -20,6 +20,9 @@ class Game:
     description: Optional[str] = None  # short store/encyclopedia blurb, in the user's language when available
     developer: Optional[str] = None
     store_id: Optional[str] = None     # platform-specific id used for online metadata lookups
+    source: Optional[str] = None       # launcher inside the platform, e.g. "modrinth" (shown under Xbox)
+    playtime_minutes: Optional[int] = None  # as recorded by the store/launcher itself (None = unknown)
+    last_played: Optional[int] = None       # unix seconds, from the store/launcher
 
     def to_dict(self) -> dict:
         return asdict(self)

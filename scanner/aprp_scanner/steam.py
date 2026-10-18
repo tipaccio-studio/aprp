@@ -79,13 +79,31 @@ def _local_cover(steam_root: Path, appid: str) -> Optional[str]:
     return _local_art(steam_root, appid, "library_600x900")
 
 
+_PLAYTIME: dict[str, tuple[int, int]] = {}
+
+
 def _art(root: Path, appid: str) -> dict:
+    minutes, last = _PLAYTIME.get(appid, (0, 0))
     return {
         "cover": _local_cover(root, appid) or _CDN.format(appid=appid),
         "banner": _local_art(root, appid, "library_hero") or _CDN_ROOT.format(appid=appid) + "library_hero.jpg",
         "logo": _local_art(root, appid, "logo", "png"),
         "store_id": appid,
+        "playtime_minutes": minutes,      # Steam tracks every app, so 0 means "never played"
+        "last_played": last or None,
     }
+
+
+def _localconfig_apps(steam_root: Path) -> list[dict]:
+    """The per-app blocks of every Steam user's localconfig.vdf on this PC."""
+    out = []
+    for lc in steam_root.glob("userdata/*/config/localconfig.vdf"):
+        try:
+            out.append(vdf.load(lc).get("userlocalconfigstore", {}).get("software", {})
+                       .get("valve", {}).get("steam", {}).get("apps", {}))
+        except OSError:
+            continue
+    return out
 
 
 def library_appids(steam_root: Path) -> set[str]:
@@ -94,11 +112,26 @@ def library_appids(steam_root: Path) -> set[str]:
     cache = steam_root / "appcache" / "librarycache"
     if cache.is_dir():
         ids.update(p.name for p in cache.iterdir() if p.is_dir() and p.name.isdigit())
-    for lc in steam_root.glob("userdata/*/config/localconfig.vdf"):
-        apps = (vdf.load(lc).get("userlocalconfigstore", {}).get("software", {})
-                .get("valve", {}).get("steam", {}).get("apps", {}))
+    for apps in _localconfig_apps(steam_root):
         ids.update(k for k in apps if k.isdigit())
     return ids
+
+
+def playtime(steam_root: Path) -> dict[str, tuple[int, int]]:
+    """appid -> (minutes played, last played unix time), as recorded by Steam (max over local users)."""
+    result: dict[str, tuple[int, int]] = {}
+    for apps in _localconfig_apps(steam_root):
+        for appid, block in apps.items():
+            if not isinstance(block, dict):
+                continue
+            try:
+                minutes = int(block.get("playtime", "0") or 0)
+                last = int(block.get("lastplayed", "0") or 0)
+            except ValueError:
+                continue
+            old = result.get(appid, (0, 0))
+            result[appid] = (max(old[0], minutes), max(old[1], last))
+    return result
 
 
 def _installed(root: Path) -> dict[str, Game]:
@@ -128,6 +161,8 @@ def scan() -> Iterator[Game]:
     root = find_steam_root()
     if root is None:
         return
+    _PLAYTIME.clear()
+    _PLAYTIME.update(playtime(root))
     installed = _installed(root)
 
     appinfo_path = root / "appcache" / "appinfo.vdf"

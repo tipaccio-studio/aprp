@@ -10,9 +10,19 @@ import json
 import sys
 import traceback
 
-from . import epic, metadata, steam, xbox
+from . import epic, metadata, modrinth, steam, xbox
 
-SCANNERS = {"steam": steam.scan, "epic": epic.scan, "xbox": xbox.scan}
+SCANNERS = {"steam": steam.scan, "epic": epic.scan, "xbox": xbox.scan, "modrinth": modrinth.scan}
+
+
+def _borrow_minecraft_banner(games: list) -> None:
+    """Modrinth instances without screenshots get the Minecraft banner from the Xbox app's Minecraft."""
+    banner = next((g.banner for g in games if g.platform == "xbox" and g.source is None
+                   and "minecraft" in g.title.lower() and g.banner), None)
+    if banner:
+        for g in games:
+            if g.source == "modrinth" and not g.banner:
+                g.banner = banner
 
 
 def run_scan(platforms: list[str], online: bool = False) -> dict:
@@ -26,6 +36,7 @@ def run_scan(platforms: list[str], online: bool = False) -> dict:
         metadata.enrich(games, online=online)
     except Exception as exc:  # noqa: BLE001 - metadata is optional
         errors.append({"platform": "metadata", "message": str(exc), "trace": traceback.format_exc()})
+    _borrow_minecraft_banner(games)
     games.sort(key=lambda g: g.title.lower())
     return {"games": [g.to_dict() for g in games], "errors": errors}
 

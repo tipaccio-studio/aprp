@@ -59,6 +59,19 @@ public sealed class PlatformConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>
+/// RadioButton.IsChecked &lt;-&gt; a string property: checked when value == ConverterParameter,
+/// and checking it sets the property. Works for mouse, keyboard (arrow keys) and UI Automation alike.
+/// </summary>
+public sealed class EqualsConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        Equals(value as string, parameter as string);
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is true ? parameter : Binding.DoNothing;
+}
+
 public sealed class BytesConverter : IValueConverter
 {
     public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -85,6 +98,7 @@ public sealed class VisibilityConverter : IValueConverter
             null => false,
             bool b => b,
             string s => s.Length > 0,
+            int i => i != 0,
             _ => true,
         };
         if (parameter as string == "Invert") visible = !visible;

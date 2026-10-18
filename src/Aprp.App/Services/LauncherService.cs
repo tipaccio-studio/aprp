@@ -17,6 +17,7 @@ public sealed class LauncherService
         "steam://install/",
         "com.epicgames.launcher://apps/",
         @"shell:AppsFolder\",
+        "modrinth://launch/instance/",
     };
 
     public void Launch(Game game)

@@ -10,3 +10,4 @@ build/
 scanner/dist/
 scanner/build/
 dist/
+installer/advinst/build/

@@ -4,7 +4,7 @@ aprp is a desktop app. It has no account, no telemetry, no analytics and no serv
 
 ## What stays on your computer
 
-aprp reads the local data of Steam, the Epic Games Launcher and the Microsoft Store/Xbox app to find your games. It saves its library, metadata cache and settings under `%LOCALAPPDATA%\aprp` and in `HKCU\Software\aprp`. The uninstaller removes these if you ask it to.
+aprp reads the local data of Steam, the Epic Games Launcher, the Microsoft Store/Xbox app and the Modrinth App to find your games and their playtime. Nothing from the Modrinth App is sent anywhere. It saves its library, metadata cache and settings under `%LOCALAPPDATA%\aprp` and in `HKCU\Software\aprp`. The uninstaller removes these if you ask it to.
 
 ## What is sent over the network
 

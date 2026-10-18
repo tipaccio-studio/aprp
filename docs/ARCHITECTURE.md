@@ -53,6 +53,7 @@ Design decisions:
 | **Steam** ([steam.py](../scanner/aprp_scanner/steam.py)) | Registry `HKCU\Software\Valve\Steam\SteamPath` → `steamapps\libraryfolders.vdf` (all library drives) → each `appmanifest_<appid>.acf`. Installed when `StateFlags & 4`. | `steam://rungameid/<appid>` |
 | **Epic** ([epic.py](../scanner/aprp_scanner/epic.py)) | `HKLM\SOFTWARE\WOW6432Node\Epic Games\EpicGamesLauncher\AppDataPath` (fallback `%ProgramData%\Epic\EpicGamesLauncher\Data\Manifests`) → `*.item` JSON. Skips incomplete installs, DLC, and non-game items such as Unreal Engine. | `com.epicgames.launcher://apps/<ns>%3A<catalogId>%3A<appName>?action=launch&silent=true` |
 | **Xbox** ([xbox.py](../scanner/aprp_scanner/xbox.py)) | `Get-AppxPackage`, keeping only packages whose install folder has `MicrosoftGame.config` (GDK games). Title and logo come from `<ShellVisuals>`, the AppId from the package manifest. | `explorer.exe shell:AppsFolder\<PackageFamilyName>!<AppId>` |
+| **Modrinth** ([modrinth.py](../scanner/aprp_scanner/modrinth.py)), shown under Xbox | `%APPDATA%\ModrinthApp\app.db` (SQLite, read-only) provides the instances, Minecraft version, loader and playtime. Files are in `profiles\<path>`, and the banner is the latest screenshot. | `modrinth://launch/instance/<id>` (the Modrinth App's own shortcut link) |
 
 **Owned but not installed** games are listed too (dimmed, with an Install button), read from local caches without network access or an API key:
 
@@ -64,6 +65,8 @@ Both caches are filled by the store client, so a game bought on another device s
 Covers: Steam's local `appcache\librarycache` (old and 2024+ layouts), falling back to the Steam CDN. Xbox uses the package logo. Epic has no local art, so the UI shows a placeholder.
 
 Security: `LauncherService` only shell-executes the three URI prefixes above. `library.json` is user-writable, so arbitrary strings from it are never executed.
+
+**Playtime:** Steam (`localconfig.vdf`: `Playtime` minutes, `LastPlayed`) and Modrinth (`app.db`) record it themselves, and the scanner passes it on as `playtime_minutes` / `last_played`. For Epic and Xbox, the C++ monitor measures each session started from aprp and stores it in `%LOCALAPPDATA%\aprp\playtime.json` ([PlaytimeStore.cs](../src/Aprp.App/Services/PlaytimeStore.cs)).
 
 ## 3. UI layout
 
