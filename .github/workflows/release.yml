@@ -151,7 +151,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $files = @("dist/aprp.exe") + (Get-ChildItem dist/aprp-setup-*.exe).FullName + "dist/SHA256SUMS.txt"
+          $policy = "https://github.com/${{ github.repository }}/blob/main/docs/CODE_SIGNING.md"
+          # Only claim signing when this build was actually signed.
+          $signing = if ($env:SIGN -eq 'true') {
+            "**Code signing policy:** free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org). Details: [code signing policy]($policy)"
+          } else {
+            "These files are **not code-signed**, so Windows SmartScreen may warn: click **More info → Run anyway**. [Code signing policy]($policy)"
+          }
           $notes = "Download **aprp-setup-${{ steps.version.outputs.version }}.exe** (installer) or **aprp.exe** (portable). Checksums: SHA256SUMS.txt.`n`n" +
-                   "**Code signing policy:** free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org). " +
-                   "Details: [docs/CODE_SIGNING.md](https://github.com/${{ github.repository }}/blob/main/docs/CODE_SIGNING.md) · [Privacy](https://github.com/${{ github.repository }}/blob/main/docs/PRIVACY.md)"
+                   "$signing · [Privacy](https://github.com/${{ github.repository }}/blob/main/docs/PRIVACY.md)"
           gh release create $env:GITHUB_REF_NAME @files --draft --title "aprp ${{ steps.version.outputs.version }}" --notes $notes --generate-notes
