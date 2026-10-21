@@ -72,10 +72,6 @@ installer/      Inno Setup script and wizard artwork
 tools/          Generates the icon, banners and platform logos
 ```
 
-## Code signing policy
-
-Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org). Who builds, reviews and approves releases: [docs/CODE_SIGNING.md](docs/CODE_SIGNING.md).
-
 ## License
 
 [MIT](LICENSE) © 2026 [Tipaccio Studio](https://tipacciostudio.com/). See [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES.md) for the bundled components.
